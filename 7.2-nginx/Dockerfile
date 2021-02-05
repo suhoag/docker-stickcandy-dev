@@ -1,4 +1,4 @@
-FROM stickcandy-dev:nginx-base
+FROM suhoag/stickcandy-dev:nginx-base
 
 # docker 빌드에 필요한 파일 전송
 COPY config /config
