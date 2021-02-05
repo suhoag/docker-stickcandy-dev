@@ -27,7 +27,7 @@ RUN set -eux \
         git \
         vim \
         ca-certificates \
-        supervisor \
+        procps \
         apt-utils \
     && apt-get upgrade -y \
     && apt-get clean \
@@ -67,9 +67,10 @@ RUN set -eux \
     && rm -rf /var/lib/apt/lists/* \
 
 # 설정 파일 전달
-    && cp -f /config/nginx.conf /etc/nginx/nginx.conf \
-    && cp -f /config/supervisord.conf /etc/supervisor/supervisord.conf \
     && cp -f /config/entrypoint.sh /entrypoint.sh \
+    && chmod +x /entrypoint.sh \
+    && echo "\ndaemon off;" >> /etc/nginx/nginx.conf \
+    && sed -i 's/user.*nginx\;/user www-data\;/g' /etc/nginx/nginx.conf \
 
 # apt 정리
     && apt-get autoclean -y \
@@ -79,13 +80,6 @@ RUN set -eux \
 # build시 사용한 임시 폴더 정리
     && rm -fr /config \
     && rm -fr /tmp/*
-
-RUN set -eux \
-    && usermod -u 99 nobody \
-    && groupmod -g 99 nogroup \
-    && chmod 700 /usr/bin/supervisor* \
-    && chmod 600 /etc/supervisor/supervisord.conf \
-    && chmod +x /entrypoint.sh
 
 # ENTRYPOINT 지정
 ENTRYPOINT ["/entrypoint.sh"]

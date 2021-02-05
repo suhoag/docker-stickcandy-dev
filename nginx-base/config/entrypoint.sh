@@ -1,5 +1,7 @@
 #!/bin/bash
 
-supervisord_conf="/etc/supervisor/supervisord.conf"
+set -e
 
-/usr/bin/supervisord -c ${supervisord_conf}
+nginx
+
+exec "$@"
