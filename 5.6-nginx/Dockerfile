@@ -1,5 +1,7 @@
 FROM suhoag/stickcandy-dev:nginx-base
 
+ENV PHP_VERSION 5.6
+
 # docker 빌드에 필요한 파일 전송
 COPY config /config
 
@@ -27,22 +29,22 @@ RUN set -eux \
     && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false
 
 ENV PHP_MODULE_LISTS \
-        php5.6-mysql \
-        php5.6-mbstring \
-        php5.6-zip \
-        php5.6-curl \
-        php5.6-xml \
-        php5.6-bcmath \
-        php5.6-xdebug \
-        php5.6-gd
+        php$PHP_VERSION-mysql \
+        php$PHP_VERSION-mbstring \
+        php$PHP_VERSION-zip \
+        php$PHP_VERSION-curl \
+        php$PHP_VERSION-xml \
+        php$PHP_VERSION-bcmath \
+        php$PHP_VERSION-xdebug \
+        php$PHP_VERSION-gd
 
 # php install
 RUN set -eux \
     && export DEBIAN_FRONTEND=noninteractive \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
-        php5.6 \
-        php5.6-fpm \
+        php$PHP_VERSION \
+        php$PHP_VERSION-fpm \
         ${PHP_MODULE_LISTS:-} \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
@@ -55,14 +57,20 @@ RUN set -eux \
     && mv composer.phar /usr/bin/composer
 
 RUN set -eux \
-    && sed -i 's/;date.timezone =/date.timezone = Asia\/Seoul/g' /etc/php/5.6/fpm/php.ini \
-    && sed -i 's/error_reporting.*/error_reporting = E_ALL/g' /etc/php/5.6/cli/php.ini \
-    && sed -i 's/display_errors = Off/display_errors = On/g' /etc/php/5.6/cli/php.ini
+    && sed -i 's/;date.timezone =/date.timezone = Asia\/Seoul/g' /etc/php/$PHP_VERSION/fpm/php.ini \
+    && sed -i 's/;date.timezone =/date.timezone = Asia\/Seoul/g' /etc/php/$PHP_VERSION/cli/php.ini \
+    && sed -i 's/error_reporting.*/error_reporting = E_ALL/g' /etc/php/$PHP_VERSION/fpm/php.ini \
+    && sed -i 's/error_reporting.*/error_reporting = E_ALL/g' /etc/php/$PHP_VERSION/cli/php.ini \
+    && sed -i 's/display_errors = Off/display_errors = On/g' /etc/php/$PHP_VERSION/fpm/php.ini \
+    && sed -i 's/display_errors = Off/display_errors = On/g' /etc/php/$PHP_VERSION/cli/php.ini
 
 RUN set -eux \
 # 설정 파일 전달
-    && cat /config/supervisord.conf >> /etc/supervisor/supervisord.conf \
-    && cp -f /config/xdebug.ini /etc/php/5.6/mods-available/xdebug.ini \
+    && cp -f /config/xdebug.ini /etc/php/$PHP_VERSION/mods-available/xdebug.ini \
+# fpm pid 생성용 디렉토리 생성
+    && mkdir /run/php \
+    && cp -f /config/entrypoint.sh /entrypoint.sh \
+    && chmod +x /entrypoint.sh \
 
 # build시 사용한 임시 폴더 정리
     && rm -fr /config \
